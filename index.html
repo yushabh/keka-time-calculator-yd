@@ -1,242 +1,275 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <title>KEKA Time Calculator</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/png" sizes="180x180" href="https://yudiz.keka.com/assets/icons/favicons/apple-touch-icon-180x180.png">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    .confetti {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      pointer-events: none;
-      z-index: 9999;
-      overflow: hidden;
-    }
-    .confetti-piece {
-      position: absolute;
-      width: 12px; height: 18px;
-      background: red;
-      opacity: 0.8;
-      border-radius: 3px;
-      will-change: transform;
-      animation: confetti-fall 2.8s cubic-bezier(.45,1.27,.43,1) forwards;
-    }
-    @keyframes confetti-fall {
-      to {
-        transform: translateY(120vh) rotateZ(330deg);
-        opacity: 0.2;
-      }
-    }
-    #endTime {
-      opacity: 0;
-      transform: translateY(24px);
-      transition: all 0.5s cubic-bezier(.75,-0.02,.2,.97);
-    }
-    #endTime.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    .shiftTab.active {
-      background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
-      color: #fff !important; transform: scale(1.08);
-      box-shadow: 0 3px 16px 0 rgba(59,130,246,0.13);
-    }
-    .shiftTab:not(.active):hover {
-      background: #f0f8ff;
-      color: #2563eb;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>KEKA Time Calculator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" sizes="180x180"
+        href="https://yudiz.keka.com/assets/icons/favicons/apple-touch-icon-180x180.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Confetti container remains same */
+        .confetti {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+        /* Emoji confetti pieces */
+        .confetti-piece {
+            position: absolute;
+            font-size: 2.2rem;
+            /* Emoji font size */
+            width: 2em;
+            height: 2em;
+            text-align: center;
+            line-height: 2em;
+            will-change: transform;
+            user-select: none;
+            pointer-events: none;
+            animation: confetti-fall 5.8s cubic-bezier(.45, 1.27, .43, 1) forwards;
+            opacity: 0.9;
+            color: #38bdf8;
+            /* Optional: color emoji differently by emoji text color */
+        }
+
+        /* Use content for emoji */
+        .confetti-piece::before {
+            content: "💸  🤑  🎉";
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Animation stays the same */
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(120vh) rotateZ(40deg);
+                opacity: 0.16;
+            }
+        }
+
+        #endTime {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: all 0.5s cubic-bezier(.75, -0.02, .2, .97);
+        }
+
+        #endTime.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .shiftTab.active {
+            background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
+            color: #fff !important;
+            transform: scale(1.08);
+            box-shadow: 0 3px 16px 0 rgba(59, 130, 246, 0.13);
+        }
+
+        .shiftTab:not(.active):hover {
+            background: #f0f8ff;
+            color: #2563eb;
+        }
+    </style>
 </head>
+
 <body class="bg-gradient-to-br from-blue-50 to-fuchsia-100 min-h-screen flex items-center justify-center">
 
-  <div id="confetti-root" class="confetti"></div>
+    <div id="confetti-root" class="confetti"></div>
 
-  <div class="max-w-lg w-full rounded-3xl shadow-2xl p-8 bg-white/90 backdrop-blur border border-blue-200 mt-8 mb-8">
+    <div class="max-w-lg w-full rounded-3xl shadow-2xl p-8 bg-white/90 backdrop-blur border border-blue-200 mt-8 mb-8">
 
-    <h2 class="text-3xl font-black mb-7 text-center text-blue-700 tracking-wide">
-      KEKA Time Calculator
-    </h2>
+        <h2 class="text-3xl font-black mb-7 text-center text-blue-700 tracking-wide">
+            KEKA Time Calculator
+        </h2>
 
-    <div class="flex justify-center gap-3 mb-6">
-      <button id="tabFull" class="shiftTab px-7 py-2 rounded-lg font-semibold transition-all" onclick="selectShift('full')">Full Day</button>
-      <button id="tabHalf" class="shiftTab px-7 py-2 rounded-lg font-semibold transition-all" onclick="selectShift('half')">Half Day</button>
-    </div>
-    <div id="shiftInfo" class="text-center text-base text-blue-900 mb-7 font-medium tracking-wide transition">
-      Working hours: <span id="shiftTime">10:00 AM to 7:00 PM (8 hours)</span>
-    </div>
-
-    <div class="flex flex-col md:flex-row gap-4 mb-7">
-      <div class="flex-1">
-        <label class="block mb-2 font-bold text-blue-700">Effective Hours</label>
-        <div class="flex gap-2">
-          <input type="number" id="effHrs" min="0" max="8" step="1"
-                 class="w-1/2 border-2 border-blue-300 px-4 py-2 rounded-xl focus:outline-blue-700 transition-all text-lg font-semibold"
-                 placeholder="Hrs">
-          <input type="number" id="effMins" min="0" max="59" step="1"
-                 class="w-1/2 border-2 border-blue-300 px-4 py-2 rounded-xl focus:outline-blue-700 transition-all text-lg font-semibold"
-                 placeholder="Mins">
+        <div class="flex justify-center gap-3 mb-6">
+            <button id="tabFull" class="shiftTab px-7 py-2 rounded-lg font-semibold transition-all"
+                onclick="selectShift('full')">Full Day</button>
+            <button id="tabHalf" class="shiftTab px-7 py-2 rounded-lg font-semibold transition-all"
+                onclick="selectShift('half')">Half Day</button>
         </div>
-      </div>
-      <div class="flex-1">
-        <label class="block mb-2 font-bold text-blue-700">Last Clock-In Time</label>
-        <input type="time" id="clockInTime"
-               class="w-full border-2 border-blue-300 px-4 py-2 rounded-xl outline-blue-700 focus:ring-2 focus:ring-blue-300 text-lg font-semibold"
-               placeholder="e.g. 10:30">
-      </div>
+        <div id="shiftInfo" class="text-center text-base text-blue-900 mb-7 font-medium tracking-wide transition">
+            Working hours: <span id="shiftTime">10:00 AM to 7:00 PM (8 hours)</span>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-4 mb-7">
+            <div class="flex-1">
+                <label class="block mb-2 font-bold text-blue-700">Effective Hours</label>
+                <div class="flex gap-2">
+                    <input type="number" id="effHrs" min="0" max="8" step="1"
+                        class="w-1/2 border-2 border-blue-300 px-4 py-2 rounded-xl focus:outline-blue-700 transition-all text-lg font-semibold"
+                        placeholder="Hrs">
+                    <input type="number" id="effMins" min="0" max="59" step="1"
+                        class="w-1/2 border-2 border-blue-300 px-4 py-2 rounded-xl focus:outline-blue-700 transition-all text-lg font-semibold"
+                        placeholder="Mins">
+                </div>
+            </div>
+            <div class="flex-1">
+                <label class="block mb-2 font-bold text-blue-700">Last Clock-In Time</label>
+                <input type="time" id="clockInTime"
+                    class="w-full border-2 border-blue-300 px-4 py-2 rounded-xl outline-blue-700 focus:ring-2 focus:ring-blue-300 text-lg font-semibold"
+                    placeholder="e.g. 10:30">
+            </div>
+        </div>
+
+        <button
+            class="w-full bg-gradient-to-r from-blue-700 via-blue-600 to-fuchsia-600 text-white px-4 py-3 mt-2 mb-3 rounded-xl font-bold hover:scale-105 active:scale-100 transition-all shadow-lg"
+            onclick="calculateEndTime()">
+            Calculate <span class="ml-2">⏱️</span>
+        </button>
+        <div class="text-center text-xs text-gray-400 mb-1" id="todayLabel"></div>
+        <div id="endTime"
+            class="mt-7 text-xl text-center font-semibold shadow-inner rounded-2xl px-6 py-6 bg-gradient-to-tr from-blue-200/50 to-fuchsia-100/40">
+        </div>
+
     </div>
 
-    <button class="w-full bg-gradient-to-r from-blue-700 via-blue-600 to-fuchsia-600 text-white px-4 py-3 mt-2 mb-3 rounded-xl font-bold hover:scale-105 active:scale-100 transition-all shadow-lg"
-      onclick="calculateEndTime()">
-      Calculate <span class="ml-2">⏱️</span>
-    </button>
-    <div class="text-center text-xs text-gray-400 mb-1" id="todayLabel"></div>
-    <div id="endTime" class="mt-7 text-xl text-center font-semibold shadow-inner rounded-2xl px-6 py-6 bg-gradient-to-tr from-blue-200/50 to-fuchsia-100/40"></div>
+    <script>
+        // Date display for today
+        const today = new Date();
+        const options = { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: true, timeZoneName: "short" };
+        document.getElementById('todayLabel').textContent = "Today is " + today.toLocaleString("en-US", options);
 
-  </div>
+        // Tab logic for full/half day
+        let currentShift = 'full';
+        function selectShift(shift) {
+            currentShift = shift;
+            document.querySelectorAll('.shiftTab').forEach(btn => btn.classList.remove('active'));
+            if (shift === 'full')
+                document.getElementById('tabFull').classList.add('active');
+            else
+                document.getElementById('tabHalf').classList.add('active');
+            if (shift === 'full') {
+                document.getElementById('shiftTime').innerText = "10:00 AM to 7:00 PM (8 hours)";
+                document.getElementById('effHrs').max = "8";
+                document.getElementById('effHrs').placeholder = "Max 8 Hrs";
+            } else {
+                document.getElementById('shiftTime').innerText = "Half Day: 10:00 AM to 2:00 PM OR 3:00 PM to 7:00 PM (4 hours)";
+                document.getElementById('effHrs').max = "4";
+                document.getElementById('effHrs').placeholder = "Max 4 Hrs";
+            }
+            document.getElementById('endTime').textContent = "";
+            document.getElementById('endTime').classList.remove('show');
+        }
 
-  <script>
-    // Date display for today
-    const today = new Date();
-    const options = { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", hour12:true, timeZoneName: "short" };
-    document.getElementById('todayLabel').textContent = "Today is " + today.toLocaleString("en-US", options);
+        function to12HourFormat(hours, minutes) {
+            let period = "AM";
+            if (hours === 0) {
+                hours = 12;
+            } else if (hours >= 12) {
+                period = "PM";
+                if (hours > 12) hours -= 12;
+            }
+            return `${hours}:${minutes.toString().padStart(2, "0")} ${period}`;
+        }
 
-    // Tab logic for full/half day
-    let currentShift = 'full';
-    function selectShift(shift) {
-      currentShift = shift;
-      document.querySelectorAll('.shiftTab').forEach(btn => btn.classList.remove('active'));
-      if (shift === 'full')
-        document.getElementById('tabFull').classList.add('active');
-      else
-        document.getElementById('tabHalf').classList.add('active');
-      if (shift === 'full') {
-        document.getElementById('shiftTime').innerText = "10:00 AM to 7:00 PM (8 hours)";
-        document.getElementById('effHrs').max = "8";
-        document.getElementById('effHrs').placeholder = "Max 8 Hrs";
-      } else {
-        document.getElementById('shiftTime').innerText = "Half Day: 10:00 AM to 2:00 PM OR 3:00 PM to 7:00 PM (4 hours)";
-        document.getElementById('effHrs').max = "4";
-        document.getElementById('effHrs').placeholder = "Max 4 Hrs";
-      }
-      document.getElementById('endTime').textContent = "";
-      document.getElementById('endTime').classList.remove('show');
-    }
+        function animateResult() {
+            const div = document.getElementById('endTime');
+            div.classList.remove('show');
+            setTimeout(() => div.classList.add('show'), 50);
+        }
 
-    function to12HourFormat(hours, minutes) {
-      let period = "AM";
-      if (hours === 0) {
-        hours = 12;
-      } else if (hours >= 12) {
-        period = "PM";
-        if (hours > 12) hours -= 12;
-      }
-      return `${hours}:${minutes.toString().padStart(2, "0")} ${period}`;
-    }
+        // Improved Confetti effect
+        function launchConfetti(count = 121) {
+            const root = document.getElementById("confetti-root");
+            root.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                const piece = document.createElement("div");
+                piece.className = "confetti-piece";
+                piece.style.left = Math.random() * 98 + "vw";
+                piece.style.top = "-2.5em"; // start above viewport
+                piece.style.animationDelay = Math.random() * 0.35 + "s";
+                // piece.style.animationDuration = 2.2 + Math.random() * 1.2 + "s";
+                piece.style.animationDuration = 4 + Math.random() * 2 + "s";
+                piece.style.transform = `rotate(${Math.random() * 360}deg) scale(${0.7 + Math.random() * 0.6})`;
+                root.appendChild(piece);
+                piece.addEventListener("animationend", () => piece.remove());
+            }
+        }
 
-    function animateResult() {
-      const div = document.getElementById('endTime');
-      div.classList.remove('show');
-      setTimeout(() => div.classList.add('show'), 50);
-    }
+        function calculateEndTime() {
+            let effHrs = parseInt(document.getElementById('effHrs').value) || 0;
+            let effMins = parseInt(document.getElementById('effMins').value) || 0;
+            const clockInTime = document.getElementById('clockInTime').value;
+            const resultDiv = document.getElementById('endTime');
 
-    // Improved Confetti effect
-    function launchConfetti(count = 54) {
-      const colors = ["#3b82f6","#a21caf","#ea580c","#facc15","#0ea5e9","#16a34a","#f472b6","hotpink"];
-      const root = document.getElementById('confetti-root');
-      root.innerHTML = '';
-      for(let i=0; i<count; i++) {
-        const piece = document.createElement('div');
-        piece.className = 'confetti-piece';
-        piece.style.background = colors[Math.floor(Math.random()*colors.length)];
-        piece.style.left = (Math.random()*98)+"vw";
-        piece.style.top = "-24px";
-        piece.style.transform = `rotate(${Math.random()*360}deg) scale(${0.85+Math.random()*0.8})`;
-        piece.style.animationDelay = (Math.random()*0.35)+"s";
-        // Random duration for more natural fall (between 2.2s and 3.4s)
-        piece.style.animationDuration = (2.2 + Math.random()*1.2) + "s";
-        piece.style.opacity = 0.7+Math.random()*0.25;
-        root.appendChild(piece);
-        piece.addEventListener('animationend', () => piece.remove());
-      }
-    }
+            let shiftMinutes = currentShift === "full" ? 8 * 60 : 4 * 60;
+            const maxEff = currentShift === 'full' ? 8 : 4;
 
-    function calculateEndTime() {
-      let effHrs = parseInt(document.getElementById('effHrs').value) || 0;
-      let effMins = parseInt(document.getElementById('effMins').value) || 0;
-      const clockInTime = document.getElementById('clockInTime').value;
-      const resultDiv = document.getElementById('endTime');
+            if ((effHrs < 0 || effHrs > maxEff) || (effMins < 0 || effMins > 59) || !clockInTime) {
+                resultDiv.innerHTML = `<span class='text-red-600 font-bold'>Please fill all fields with valid values.</span>`;
+                resultDiv.className = "mt-7 text-xl text-center font-semibold shadow-inner rounded-2xl px-6 py-6 bg-gradient-to-tr from-yellow-100 via-red-100 to-blue-200/40";
+                animateResult();
+                return;
+            }
 
-      let shiftMinutes = currentShift === "full" ? 8 * 60 : 4 * 60;
-      const maxEff = currentShift === 'full' ? 8 : 4;
+            let totalEffMinutes = effHrs * 60 + effMins;
 
-      if ((effHrs < 0 || effHrs > maxEff) || (effMins < 0 || effMins > 59) || !clockInTime) {
-        resultDiv.innerHTML = `<span class='text-red-600 font-bold'>Please fill all fields with valid values.</span>`;
-        resultDiv.className = "mt-7 text-xl text-center font-semibold shadow-inner rounded-2xl px-6 py-6 bg-gradient-to-tr from-yellow-100 via-red-100 to-blue-200/40";
-        animateResult();
-        return;
-      }
-
-      let totalEffMinutes = effHrs * 60 + effMins;
-
-      if (totalEffMinutes > shiftMinutes) {
-        launchConfetti();
-        const overtimeMinutes = totalEffMinutes - shiftMinutes;
-        const overtimeHrs = Math.floor(overtimeMinutes / 60);
-        const overtimeMins = overtimeMinutes % 60;
-        let overtimeStr = "";
-        if (overtimeHrs > 0) overtimeStr += `${overtimeHrs} hr${overtimeHrs > 1 ? "s" : ""} `;
-        overtimeStr += `${overtimeMins} min${overtimeMins !== 1 ? "s" : ""}`;
-        resultDiv.className = "mt-7 text-xl text-center font-semibold shadow-inner rounded-2xl px-6 py-6 bg-gradient-to-tr from-fuchsia-100/70 to-blue-200/60";
-        resultDiv.innerHTML = `<span class="inline-block align-middle animate-bounce text-3xl">🎉</span><br>
+            if (totalEffMinutes > shiftMinutes) {
+                launchConfetti();
+                const overtimeMinutes = totalEffMinutes - shiftMinutes;
+                const overtimeHrs = Math.floor(overtimeMinutes / 60);
+                const overtimeMins = overtimeMinutes % 60;
+                let overtimeStr = "";
+                if (overtimeHrs > 0) overtimeStr += `${overtimeHrs} hr${overtimeHrs > 1 ? "s" : ""} `;
+                overtimeStr += `${overtimeMins} min${overtimeMins !== 1 ? "s" : ""}`;
+                resultDiv.className = "mt-7 text-xl text-center font-semibold shadow-inner rounded-2xl px-6 py-6 bg-gradient-to-tr from-fuchsia-100/70 to-blue-200/60";
+                resultDiv.innerHTML = `<span class="inline-block align-middle animate-bounce text-3xl">🎉</span><br>
         <span>You have already completed your working hours for this shift<br>with overtime of<br>
         <span class="text-violet-700 font-bold">${overtimeStr.trim()}</span></span>`;
-        animateResult();
-        return;
-      } else if (totalEffMinutes === shiftMinutes) {
-        launchConfetti();
-        resultDiv.className = "mt-7 text-xl text-center font-semibold shadow-inner rounded-2xl px-6 py-6 bg-gradient-to-tr from-fuchsia-100/60 to-blue-200/70";
-        resultDiv.innerHTML = `<span class="inline-block align-middle animate-bounce text-3xl">🎉</span><br>
+                animateResult();
+                return;
+            } else if (totalEffMinutes === shiftMinutes) {
+                launchConfetti();
+                resultDiv.className = "mt-7 text-xl text-center font-semibold shadow-inner rounded-2xl px-6 py-6 bg-gradient-to-tr from-fuchsia-100/60 to-blue-200/70";
+                resultDiv.innerHTML = `<span class="inline-block align-middle animate-bounce text-3xl">🎉</span><br>
         <span>You have already completed your working hours for this shift!</span>`;
-        animateResult();
-        return;
-      }
+                animateResult();
+                return;
+            }
 
-      const remainingMinutes = shiftMinutes - totalEffMinutes;
-      const [hr, min] = clockInTime.split(":").map(Number);
-      const totalMinutes = hr * 60 + min + remainingMinutes;
-      let endHr = Math.floor(totalMinutes / 60) % 24;
-      let endMin = Math.round(totalMinutes % 60);
+            const remainingMinutes = shiftMinutes - totalEffMinutes;
+            const [hr, min] = clockInTime.split(":").map(Number);
+            const totalMinutes = hr * 60 + min + remainingMinutes;
+            let endHr = Math.floor(totalMinutes / 60) % 24;
+            let endMin = Math.round(totalMinutes % 60);
 
-      const nowDate = new Date();
-      const nowMinutes = nowDate.getHours() * 60 + nowDate.getMinutes();
-      const goHomeMinutes = endHr * 60 + endMin;
+            const nowDate = new Date();
+            const nowMinutes = nowDate.getHours() * 60 + nowDate.getMinutes();
+            const goHomeMinutes = endHr * 60 + endMin;
 
-      if (nowMinutes >= goHomeMinutes) {
-        launchConfetti();
-        const overtimeMinutes = nowMinutes - goHomeMinutes;
-        const overtimeHrs = Math.floor(overtimeMinutes / 60);
-        const overtimeMins = overtimeMinutes % 60;
-        let overtimeStr = "";
-        if (overtimeHrs > 0) overtimeStr += `${overtimeHrs} hr${overtimeHrs > 1 ? "s" : ""} `;
-        overtimeStr += `${overtimeMins} min${overtimeMins !== 1 ? "s" : ""}`;
-        resultDiv.className = "mt-7 text-xl text-center font-semibold shadow-inner rounded-2xl px-6 py-6 bg-gradient-to-tr from-violet-100/80 to-blue-200/70";
-        resultDiv.innerHTML = `<span class="inline-block align-middle animate-bounce text-3xl">🎉</span><br>
+            if (nowMinutes >= goHomeMinutes) {
+                launchConfetti();
+                const overtimeMinutes = nowMinutes - goHomeMinutes;
+                const overtimeHrs = Math.floor(overtimeMinutes / 60);
+                const overtimeMins = overtimeMinutes % 60;
+                let overtimeStr = "";
+                if (overtimeHrs > 0) overtimeStr += `${overtimeHrs} hr${overtimeHrs > 1 ? "s" : ""} `;
+                overtimeStr += `${overtimeMins} min${overtimeMins !== 1 ? "s" : ""}`;
+                resultDiv.className = "mt-7 text-xl text-center font-semibold shadow-inner rounded-2xl px-6 py-6 bg-gradient-to-tr from-violet-100/80 to-blue-200/70";
+                resultDiv.innerHTML = `<span class="inline-block align-middle animate-bounce text-3xl">🎉</span><br>
         <span>You have already completed your working hours for this shift and done overtime of <span class="text-fuchsia-700 font-bold">${overtimeStr.trim()}</span>.</span>`;
-        animateResult();
-        return;
-      }
+                animateResult();
+                return;
+            }
 
-      const formatted = to12HourFormat(endHr, endMin);
-      resultDiv.className = "mt-7 text-xl text-center font-semibold shadow-inner rounded-2xl px-6 py-6 bg-gradient-to-tr from-blue-100 via-violet-100/80 to-fuchsia-100/60";
-      resultDiv.innerHTML = `<span class="inline-block align-middle animate-pulse text-2xl mr-2">⏳</span> 
+            const formatted = to12HourFormat(endHr, endMin);
+            resultDiv.className = "mt-7 text-xl text-center font-semibold shadow-inner rounded-2xl px-6 py-6 bg-gradient-to-tr from-blue-100 via-violet-100/80 to-fuchsia-100/60";
+            resultDiv.innerHTML = `<span class="inline-block align-middle animate-pulse text-2xl mr-2">⏳</span> 
         You can go to home at:<br><span class="text-blue-700 font-extrabold text-2xl">${formatted}</span>`;
-      animateResult();
-    }
-    // Init
-    selectShift('full');
-  </script>
+            animateResult();
+        }
+        // Init
+        selectShift('full');
+    </script>
 </body>
+
 </html>
