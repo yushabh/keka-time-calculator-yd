@@ -115,11 +115,11 @@
       if (shift === 'full') {
         document.getElementById('shiftTime').innerText = "10:00 AM to 7:00 PM (8 hours)";
         document.getElementById('effHrs').max = "8";
-        document.getElementById('effHrs').placeholder = "Hrs (0-8)";
+        document.getElementById('effHrs').placeholder = "Max 8 Hrs";
       } else {
         document.getElementById('shiftTime').innerText = "Half Day: 10:00 AM to 2:00 PM OR 3:00 PM to 7:00 PM (4 hours)";
         document.getElementById('effHrs').max = "4";
-        document.getElementById('effHrs').placeholder = "Hrs (0-4)";
+        document.getElementById('effHrs').placeholder = "Max 4 Hrs";
       }
       document.getElementById('endTime').textContent = "";
       document.getElementById('endTime').classList.remove('show');
